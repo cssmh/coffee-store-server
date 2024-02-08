@@ -1,13 +1,13 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 require("dotenv").config();
-const port = process.env.PORT || 5000
+const port = process.env.PORT || 5000;
 
 // middleware
 app.use(cors());
-app.use(express.json())
+app.use(express.json());
 
 // mongo code
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ae0fypv.mongodb.net/?retryWrites=true&w=majority`;
@@ -18,16 +18,43 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+    const coffeeCollection = client.db("coffeeDB").collection("coffees");
+
+    // create a coffee to database
+    app.post("/coffees", async (req, res) => {
+      const getDataFromClient = req.body;
+      console.log(getDataFromClient);
+      const result = await coffeeCollection.insertOne(getDataFromClient);
+      res.send(result);
+    });
+
+    // get coffee from database and show to client
+    app.get("/coffees", async(req, res) => {
+        const cursor = coffeeCollection.find();
+        const result = await cursor.toArray()
+        res.send(result)
+    })
+    // delete a coffee from database
+    app.delete("/delete/:idx", async(req, res) => {
+        const paramsId = req.params.idx
+        const query = { _id: new ObjectId(paramsId) };
+        const result = await coffeeCollection.deleteOne(query);
+        res.send(result);
+    })
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -36,10 +63,10 @@ async function run() {
 run().catch(console.dir);
 // mongo code end
 
-app.get('/', (req, res) => {
-    res.send('Hello 5000 PORT')
-  })
+app.get("/", (req, res) => {
+  res.send("Hello 5000 PORT");
+});
 
 app.listen(port, () => {
-    console.log("CRUD RUNNING SUCCESSFULLY");
-})
+  console.log("CRUD RUNNING SUCCESSFULLY");
+});
