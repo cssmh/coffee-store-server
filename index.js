@@ -37,18 +37,52 @@ async function run() {
     });
 
     // get coffee from database and show to client
-    app.get("/coffees", async(req, res) => {
-        const cursor = coffeeCollection.find();
-        const result = await cursor.toArray()
-        res.send(result)
-    })
+    app.get("/coffees", async (req, res) => {
+      const cursor = coffeeCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
     // delete a coffee from database
-    app.delete("/delete/:idx", async(req, res) => {
-        const paramsId = req.params.idx
-        const query = { _id: new ObjectId(paramsId) };
-        const result = await coffeeCollection.deleteOne(query);
-        res.send(result);
-    })
+    app.delete("/delete/:idx", async (req, res) => {
+      const paramsId = req.params.idx;
+      const query = { _id: new ObjectId(paramsId) };
+      const result = await coffeeCollection.deleteOne(query);
+      res.send(result);
+    });
+    // Update coffee part
+    // first get that unique id
+    app.get("/coffee-update/:id", async (req, res) => {
+      const paramsId = req.params.id;
+      const query = { _id: new ObjectId(paramsId) };
+      const result = await coffeeCollection.findOne(query);
+      res.send(result);
+    });
+    // Update coffee part end
+    // time to update to database
+    app.put("/update/:id", async (req, res) => {
+      const paramsId = req.params.id;
+      const filter = { _id: new ObjectId(paramsId) };
+      const updatedInfoFromClient = req.body;
+      const options = { upsert: true };
+      const updatedDoc = {
+        $set: {
+          name: updatedInfoFromClient.name,
+          chef: updatedInfoFromClient.chef,
+          price: updatedInfoFromClient.price,
+          taste: updatedInfoFromClient.taste,
+          category: updatedInfoFromClient.category,
+          details: updatedInfoFromClient.details,
+          photo: updatedInfoFromClient.photo,
+        },
+      };
+
+      const result = await coffeeCollection.updateOne(
+        filter,
+        updatedDoc,
+        options
+      );
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
