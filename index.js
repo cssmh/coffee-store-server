@@ -107,6 +107,19 @@ async function run() {
       res.send(result);
     });
     // delete user end
+    // update/patch lastLoggedAt
+    app.patch("/user-update", async (req, res) => {
+      const getUpdatedInfo = req.body;
+      const filter = { email: getUpdatedInfo.email };
+      const updateDoc = {
+        $set: {
+          lastLoggedAt: getUpdatedInfo.lastLoggedAt,
+        },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    // update/patch lastLoggedAt end
     // users related apis end
 
     // Send a ping to confirm a successful connection
