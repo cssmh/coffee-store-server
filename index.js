@@ -27,6 +27,7 @@ async function run() {
     await client.connect();
 
     const coffeeCollection = client.db("coffeeDB").collection("coffees");
+    const userCollection = client.db("coffeeDB").collection("users");
 
     // create a coffee to database
     app.post("/coffees", async (req, res) => {
@@ -83,7 +84,31 @@ async function run() {
       );
       res.send(result);
     });
-// update to database completed
+    // update to database completed
+    // users related apis
+    app.post("/users", async (req, res) => {
+      const getUserFromClient = req.body;
+      // console.log(getUserFromClient);
+      const result = await userCollection.insertOne(getUserFromClient);
+      res.send(result);
+    });
+    // get all users
+    app.get("/allUsers", async (req, res) => {
+      const cursor = userCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+    // get all users end
+    // delete user
+    app.delete("/user/delete/:id", async (req, res) => {
+      const getParamsId = req.params.id;
+      const query = { _id: new ObjectId(getParamsId) };
+      const result = await userCollection.deleteOne(query);
+      res.send(result);
+    });
+    // delete user end
+    // users related apis end
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
