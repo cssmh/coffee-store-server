@@ -5,7 +5,15 @@ const app = express();
 require("dotenv").config();
 const port = 5000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://coffee-store-63246.web.app",
+      "https://coffee-master.netlify.app",
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 const client = new MongoClient(process.env.URI, {
@@ -19,7 +27,7 @@ const client = new MongoClient(process.env.URI, {
 async function run() {
   try {
     const coffeeCollection = client.db("coffeeMaster").collection("coffees");
-    const userCollection = client.db("coffeeMaster").collection("users");
+    const cartCollection = client.db("coffeeMaster").collection("cart");
 
     app.post("/coffees", async (req, res) => {
       try {
@@ -27,6 +35,7 @@ async function run() {
         res.send(result);
       } catch (error) {
         console.log(error);
+        res.status(500).send("Error inserting coffee");
       }
     });
 
@@ -36,6 +45,7 @@ async function run() {
         res.send(result);
       } catch (error) {
         console.log(error);
+        res.status(500).send("Error fetching coffees");
       }
     });
 
@@ -46,6 +56,7 @@ async function run() {
         res.send(result);
       } catch (error) {
         console.log(error);
+        res.status(500).send("Error deleting coffee");
       }
     });
 
@@ -56,6 +67,7 @@ async function run() {
         res.send(result);
       } catch (error) {
         console.log(error);
+        res.status(500).send("Error fetching coffee for update");
       }
     });
 
@@ -80,65 +92,49 @@ async function run() {
         res.send(result);
       } catch (error) {
         console.log(error);
+        res.status(500).send("Error updating coffee");
       }
     });
 
-    app.post("/users", async (req, res) => {
+    app.post("/cart", async (req, res) => {
       try {
-        const result = await userCollection.insertOne(req.body);
+        const result = await cartCollection.insertOne(req.body);
         res.send(result);
       } catch (error) {
         console.log(error);
+        res.status(500).send("Error adding to cart");
       }
     });
 
-    app.get("/allUsers", async (req, res) => {
+    app.get("/cart", async (req, res) => {
       try {
-        const result = await userCollection.find().toArray();
+        const result = await cartCollection.find().toArray();
         res.send(result);
       } catch (error) {
         console.log(error);
+        res.status(500).send("Error fetching cart items");
       }
     });
 
-    // get all users end
-    // delete user
-    app.delete("/user/delete/:id", async (req, res) => {
+    app.delete("/cart/:id", async (req, res) => {
       try {
-        const query = { _id: new ObjectId(req.params.id) };
-        const result = await userCollection.deleteOne(query);
+        const query = { _id: new ObjectId(req.params?.id) };
+        const result = await cartCollection.deleteOne(query);
         res.send(result);
       } catch (error) {
         console.log(error);
+        res.status(500).send("Error fetching cart items");
       }
     });
 
-    // delete user end
-    // update/patch lastLoggedAt
-    app.patch("/user-update", async (req, res) => {
-      try {
-        const filter = { email: req.body.email };
-        const updateDoc = {
-          $set: {
-            lastLoggedAt: getUpdatedInfo.lastLoggedAt,
-          },
-        };
-        const result = await userCollection.updateOne(filter, updateDoc);
-        res.send(result);
-      } catch (error) {
-        console.log(error);
-      }
-    });
-
-    // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. Successfully connected to MongoDB!");
+    // console.log("Pinged your deployment. Successfully connected to MongoDB!");
   } finally {
     // await client.close();
   }
 }
+
 run().catch(console.dir);
-// mongo code end
 
 app.get("/", (req, res) => {
   res.send("Welcome to Coffee Master Server");
