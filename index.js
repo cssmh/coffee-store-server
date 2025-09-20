@@ -8,6 +8,7 @@ const port = 5000;
 app.use(
   cors({
     origin: [
+      "http://localhost:5173",
       "https://coffee-store-63246.web.app",
       "https://coffee-master.netlify.app",
     ],
@@ -128,7 +129,7 @@ async function run() {
     });
 
     await client.db("admin").command({ ping: 1 });
-    // console.log("Pinged your deployment. Successfully connected to MongoDB!");
+    console.log("Pinged your deployment. Successfully connected to MongoDB!");
   } finally {
     // await client.close();
   }
